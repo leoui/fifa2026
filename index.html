@@ -254,6 +254,7 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;
   }
   .chip.http{color:var(--live);border-color:rgba(255,68,56,.4)}
+  .chip.feat{color:var(--gold);border-color:rgba(239,184,50,.45)}
   .tile-num{margin-left:auto;font-variant-numeric:tabular-nums}
   .more-wrap{display:flex;justify-content:center;margin:26px 0 0}
   .empty{
@@ -368,6 +369,16 @@
 
   var PLAYLIST_URL = "https://iptv-org.github.io/iptv/index.m3u";
   var PAGE_SIZE = 60;
+
+  // Curated/featured channels — guaranteed present and pinned to the top of the
+  // default view, even if the upstream index changes. Stream URLs are the
+  // broadcasters' own publicly published HLS manifests (same ones iptv-org lists).
+  var CURATED = [
+    { name: "TVRI Sport HD", id: "TVRISport.id@SD",
+      url: "https://ott-balancer.tvri.go.id/live/eds/SportHD/hls/SportHD.m3u8",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/e/e7/TVRI_Sport_logo.png",
+      cc: "ID", cats: ["Sports"], featured: true }
+  ];
   var QUICK = ["US","MX","CA","GB","ES","DE","FR","IT","BR","AR"];
   var RECENT_MAX = 12;
   var WC_START = Date.UTC(2026,5,11);  // 11 Jun 2026
@@ -489,18 +500,42 @@
     return out;
   }
 
+  function normalizeCurated(){
+    return CURATED.map(function(c){
+      return {
+        name: c.name, logo: c.logo || "", id: c.id || "", url: c.url,
+        cc: c.cc || "", cats: (c.cats || []).slice(),
+        https: c.url.indexOf("https://") === 0, featured: true
+      };
+    });
+  }
+
+  function mergeChannels(parsed){
+    var curated = normalizeCurated();
+    var curatedUrls = {};
+    curated.forEach(function(c){ curatedUrls[c.url] = true; });
+    // Drop any index entry that duplicates a curated stream, then put curated first.
+    var rest = parsed.filter(function(c){ return !curatedUrls[c.url]; });
+    return curated.concat(rest);
+  }
+
   function loadPlaylist(){
     fetch(PLAYLIST_URL)
       .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
       .then(function(text){
-        state.channels = parseM3U(text);
+        state.channels = mergeChannels(parseM3U(text));
         buildFilters();
         $("loading").classList.add("hidden");
         applyFilters();
       })
       .catch(function(e){
-        $("loading").innerHTML = "Couldn't fetch the playlist (" + e.message +
-          "). The iptv-org index may be temporarily unreachable — reload to retry.";
+        // Index unreachable — still show curated channels so featured streams work.
+        state.channels = mergeChannels([]);
+        buildFilters();
+        $("loading").classList.add("hidden");
+        applyFilters();
+        $("count").innerHTML = "<b>" + state.channels.length + "</b> featured channel(s) — " +
+          "couldn't load the full index (" + escHtml(e.message) + "). Reload to retry.";
       });
   }
 
@@ -599,6 +634,10 @@
       if(q && c.name.toLowerCase().indexOf(q) === -1) return false;
       return true;
     });
+    // Pin featured channels to the top of the default view (not in recent, which is time-ordered).
+    if(state.view !== "recent"){
+      state.filtered.sort(function(a,b){ return (b.featured?1:0) - (a.featured?1:0); });
+    }
     state.shown = 0;
     grid.innerHTML = "";
     renderMore();
@@ -642,6 +681,7 @@
       '<button class="fav-btn' + (isFav ? " on" : "") + '" aria-pressed="' + isFav + '" aria-label="' +
         (isFav ? "Remove from favorites" : "Add to favorites") + '">' + (isFav ? "★" : "☆") + "</button></div>" +
       '<div class="tile-foot">' +
+        (ch.featured ? '<span class="chip feat">★ Featured</span>' : "") +
         (ch.cc ? '<span class="chip">' + flagEmoji(ch.cc) + " " + ch.cc + "</span>" : "") +
         (ch.cats[0] ? '<span class="chip">' + escHtml(ch.cats[0]) + "</span>" : "") +
         (!ch.https ? '<span class="chip http">HTTP</span>' : "") +
