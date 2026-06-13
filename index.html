@@ -370,6 +370,13 @@
   var PLAYLIST_URL = "https://iptv-org.github.io/iptv/index.m3u";
   var PAGE_SIZE = 60;
 
+  // Default channel loaded when the app opens. Set DEFAULT_CHANNEL_ID to "" to
+  // disable and show the idle screen instead. AUTOSTART_MUTED=true lets it
+  // actually begin playing on open (browsers block autoplay WITH sound until
+  // the user interacts); set false to pre-select it paused with sound on.
+  var DEFAULT_CHANNEL_ID = "TVRISport.id@SD";
+  var AUTOSTART_MUTED = true;
+
   // Curated/featured channels — guaranteed present and pinned to the top of the
   // default view, even if the upstream index changes. Stream URLs are the
   // broadcasters' own publicly published HLS manifests (same ones iptv-org lists).
@@ -527,6 +534,7 @@
         buildFilters();
         $("loading").classList.add("hidden");
         applyFilters();
+        autostartDefault();
       })
       .catch(function(e){
         // Index unreachable — still show curated channels so featured streams work.
@@ -536,7 +544,18 @@
         applyFilters();
         $("count").innerHTML = "<b>" + state.channels.length + "</b> featured channel(s) — " +
           "couldn't load the full index (" + escHtml(e.message) + "). Reload to retry.";
+        autostartDefault();
       });
+  }
+
+  function autostartDefault(){
+    if(!DEFAULT_CHANNEL_ID) return;
+    var ch = null;
+    for(var i=0;i<state.channels.length;i++){
+      if(state.channels[i].id === DEFAULT_CHANNEL_ID){ ch = state.channels[i]; break; }
+    }
+    if(!ch) return;          // default not in list (e.g. removed upstream) — leave idle screen
+    play(ch, AUTOSTART_MUTED);
   }
 
   /* ---------- filters ---------- */
@@ -730,15 +749,27 @@
     store.set("wc26:recent", state.recent);
   }
   video.addEventListener("playing", function(){ if(state.current) addRecent(state.current); });
+  video.addEventListener("volumechange", function(){
+    if(!video.muted && state.current){
+      var meta = $("now-meta").textContent;
+      var cut = meta.indexOf(" · 🔇");
+      if(cut > -1) $("now-meta").textContent = meta.slice(0, cut);
+    }
+  });
 
   /* ---------- player ---------- */
-  function play(ch){
+  function play(ch, autostart){
     state.current = ch;
+    // Muted autostart lets the default channel actually begin on open (browser
+    // autoplay policy blocks sound until interaction). A real channel click is
+    // a user gesture, so we unmute then.
+    video.muted = !!autostart;
     $("now-name").textContent = ch.name;
     $("now-meta").textContent =
       (ch.cc ? (COUNTRY_NAMES[ch.cc]||ch.cc) + " · " : "") +
       (ch.cats[0] ? ch.cats[0] + " · " : "") +
-      (ch.https ? "HTTPS" : "HTTP");
+      (ch.https ? "HTTPS" : "HTTP") +
+      (autostart ? " · 🔇 muted — tap the speaker to unmute" : "");
     $("screen-idle").classList.add("hidden");
     $("screen-error").classList.add("hidden");
     syncFavCurrentBtn();
