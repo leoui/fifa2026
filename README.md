@@ -6,11 +6,27 @@ https://iptv-org.github.io/iptv/index.m3u
 
 ## Features
 - Full channel index with category + country filters, search, quick pills
+- Live scores & match schedule board (World Cup 2026): Live/Today, Upcoming,
+  and Results tabs with themed match cards, auto-refresh, and local kick-off times
 - Favorites (star any channel) and Recently Watched — stored in your
   browser's localStorage, per device
 - PWA: installable on phone/desktop home screen with app icon; the app
   shell loads offline (streams themselves always need a connection)
 - HLS playback (hls.js), failed-stream marking, auto-skip, random channel
+- Default channel (TVRI Sport HD) auto-loads muted on open
+
+## Match data source & honest limitations
+- Schedule + results come from the public-domain **openfootball/worldcup.json**
+  dataset, served via the jsDelivr CDN (no API key, CORS-friendly, works from a
+  static site). Falls back to raw.githubusercontent if the CDN is unreachable.
+- This is a schedule-and-results feed, NOT a real-time in-play ticker. "LIVE"
+  status is *inferred* from kick-off time (kickoff → ~2.5h window). Scores
+  appear/refresh as the community updates the dataset, which can lag a match
+  in progress. Tap Refresh for the latest; the board also auto-refreshes.
+- A true second-by-second feed only comes from paid/authenticated football APIs
+  (Sportmonks, TheStatsAPI, etc.), which require a server-side key and are not
+  wired in (a key cannot be safely embedded in static client code).
+- To change the data source, edit the SRC array in the MatchBoard module.
 
 ## Deploy to Vercel (~2 minutes)
 

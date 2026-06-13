@@ -165,6 +165,83 @@
   .btn-gold{background:var(--gold);color:var(--ink);border-color:var(--gold)}
   .btn-gold:hover{background:#F8C84F}
 
+  /* ============ MATCH BOARD ============ */
+  .board{margin:26px 0 4px}
+  .board-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .board-title{
+    font-family:var(--font-display);font-size:20px;letter-spacing:-0.01em;
+  }
+  .board-tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tab{
+    border:1px solid var(--line);background:transparent;color:var(--muted);
+    border-radius:999px;padding:6px 14px;
+    font-family:var(--font-cond);font-weight:700;font-size:13.5px;
+    letter-spacing:.1em;text-transform:uppercase;transition:all .15s;
+  }
+  .tab:hover{color:var(--chalk);border-color:var(--muted)}
+  .tab.on{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+  .board-spacer{flex:1}
+  .board-updated{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+  .board-refresh{padding:7px 13px;font-size:13px}
+  .board-note{color:var(--muted);font-size:12.5px;margin-top:10px;line-height:1.6}
+
+  .match-row{
+    display:grid;grid-auto-flow:column;grid-auto-columns:minmax(248px,288px);
+    gap:12px;overflow-x:auto;padding:4px 2px 14px;scroll-snap-type:x mandatory;
+    scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+  }
+  .match-row::-webkit-scrollbar{height:8px}
+  .match-row::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+  .board-loading{display:flex;align-items:center;gap:10px;color:var(--muted);
+    font-family:var(--font-cond);font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    font-size:13px;padding:30px 4px}
+  .board-empty{color:var(--muted);padding:24px 4px;font-size:14px}
+
+  .mcard{
+    scroll-snap-align:start;
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:linear-gradient(180deg,var(--panel) 0%,#0E1424 100%);
+    padding:14px;display:flex;flex-direction:column;gap:12px;min-height:150px;
+    position:relative;overflow:hidden;
+  }
+  .mcard.live{border-color:rgba(255,68,56,.55);box-shadow:0 0 0 1px rgba(255,68,56,.25)}
+  .mcard::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--live),var(--blue),var(--green))}
+  .mcard-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .mcard-status{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--font-cond);font-weight:700;font-size:12px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  }
+  .mcard-status.live{color:var(--live)}
+  .mcard-status.ft{color:var(--green)}
+  .mcard-status .dot{width:7px;height:7px;border-radius:50%;background:var(--live)}
+  .mcard-status.live .dot{animation:pulse 1.6s infinite}
+  .mcard-date{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+  .mcard-teams{display:flex;flex-direction:column;gap:10px}
+  .team{display:flex;align-items:center;gap:10px}
+  .team .fl{font-size:24px;line-height:1;width:30px;text-align:center;flex:none}
+  .team .nm{font-weight:600;font-size:15px;flex:1;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .team .sc{font-family:var(--font-display);font-size:22px;min-width:24px;text-align:right}
+  .team.win .nm{color:var(--chalk)}
+  .team.lose .nm,.team.lose .sc{color:var(--muted)}
+  .mcard-kick{
+    text-align:center;font-family:var(--font-cond);font-weight:700;
+    font-size:24px;letter-spacing:.02em;color:var(--gold);
+    padding:6px 0;
+  }
+  .mcard-kick small{display:block;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:2px}
+  .mcard-foot{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    border-top:1px solid var(--line);padding-top:10px;
+    font-family:var(--font-cond);font-weight:600;font-size:12px;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  }
+  .mcard-foot .g{color:var(--gold);border:1px solid rgba(239,184,50,.4);border-radius:4px;padding:1px 7px}
+  .mcard-foot .ven{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+
   /* ============ CONTROLS ============ */
   .controls{margin:28px 0 18px;display:flex;flex-direction:column;gap:14px}
   .controls-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -330,6 +407,25 @@
       <button class="btn" id="btn-fav-current" disabled>☆ Favorite</button>
       <button class="btn" id="btn-random">Surprise me</button>
     </div>
+  </section>
+
+  <!-- MATCH BOARD: live scores + schedule -->
+  <section class="board" id="board" aria-label="World Cup matches">
+    <div class="board-head">
+      <div class="board-title">Matches</div>
+      <div class="board-tabs" id="board-tabs" role="tablist">
+        <button class="tab" data-tab="live" role="tab">Live / Today</button>
+        <button class="tab" data-tab="upcoming" role="tab">Upcoming</button>
+        <button class="tab" data-tab="results" role="tab">Results</button>
+      </div>
+      <span class="board-spacer"></span>
+      <span class="board-updated" id="board-updated"></span>
+      <button class="btn board-refresh" id="board-refresh" aria-label="Refresh matches">↻ Refresh</button>
+    </div>
+    <div class="match-row" id="match-row" aria-live="polite">
+      <div class="board-loading" id="board-loading"><span class="spin"></span> Loading fixtures…</div>
+    </div>
+    <p class="board-note" id="board-note"></p>
   </section>
 
   <!-- CONTROLS -->
@@ -885,6 +981,208 @@
   }
 
   loadPlaylist();
+
+  /* ===================== MATCH BOARD ===================== */
+  (function MatchBoard(){
+    // Public-domain, keyless, CORS-friendly fixtures+results (openfootball).
+    var SRC = [
+      "https://cdn.jsdelivr.net/gh/openfootball/worldcup.json@master/2026/worldcup.json",
+      "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json"
+    ];
+    var LIVE_WINDOW_MS = 150 * 60 * 1000;   // ~2.5h after kickoff = treat as in-progress
+    var REFRESH_MS = 60 * 1000;
+
+    // Team name -> flag. Special sub-national flags use direct emoji.
+    var FLAG_OVERRIDE = {
+      "England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Scotland":"🏴󠁧󠁢󠁳󠁣󠁴󠁿","Wales":"🏴󠁧󠁢󠁷󠁬󠁳󠁿"
+    };
+    var NAME_CC = {
+      "Mexico":"MX","South Africa":"ZA","South Korea":"KR","Czech Republic":"CZ",
+      "Canada":"CA","Switzerland":"CH","Qatar":"QA","Bosnia & Herzegovina":"BA","Bosnia and Herzegovina":"BA",
+      "Brazil":"BR","Morocco":"MA","Haiti":"HT","United States":"US","USA":"US","Paraguay":"PY","Australia":"AU",
+      "Germany":"DE","Curaçao":"CW","Curacao":"CW","Ivory Coast":"CI","Côte d'Ivoire":"CI","Ecuador":"EC",
+      "Netherlands":"NL","Japan":"JP","Tunisia":"TN","Belgium":"BE","Egypt":"EG","Iran":"IR","New Zealand":"NZ",
+      "Spain":"ES","Cape Verde":"CV","Saudi Arabia":"SA","Uruguay":"UY","France":"FR","Senegal":"SN","Norway":"NO",
+      "Argentina":"AR","Algeria":"DZ","Austria":"AT","Jordan":"JO","Portugal":"PT","Colombia":"CO","Uzbekistan":"UZ",
+      "Croatia":"HR","Ghana":"GH","Panama":"PA","Italy":"IT","Nigeria":"NG","Cameroon":"CM","Ukraine":"UA",
+      "Poland":"PL","Denmark":"DK","Sweden":"SE","Serbia":"RS","Turkey":"TR","Türkiye":"TR","Greece":"GR",
+      "Peru":"PE","Chile":"CL","Costa Rica":"CR","Honduras":"HN","Jamaica":"JM","Venezuela":"VE","Bolivia":"BO"
+    };
+    function flagFor(name){
+      if(!name) return "⚽";
+      if(FLAG_OVERRIDE[name]) return FLAG_OVERRIDE[name];
+      var cc = NAME_CC[name];
+      if(!cc) return "⚽";
+      var A = 0x1F1E6;
+      return String.fromCodePoint(A + cc.charCodeAt(0) - 65, A + cc.charCodeAt(1) - 65);
+    }
+
+    var el = {
+      row: document.getElementById("match-row"),
+      tabs: document.getElementById("board-tabs"),
+      updated: document.getElementById("board-updated"),
+      refresh: document.getElementById("board-refresh"),
+      note: document.getElementById("board-note"),
+      loading: document.getElementById("board-loading")
+    };
+    var matches = [], tab = "live", timer = null;
+
+    function parseKickoff(date, time){
+      // date "2026-06-13", time "12:00 UTC-7"
+      if(!date) return null;
+      var dm = date.split("-");
+      var tm = (time || "00:00").match(/(\d{1,2}):(\d{2})/);
+      var off = (time || "").match(/UTC\s*([+-]?\d{1,2})/i);
+      var hh = tm ? +tm[1] : 0, mm = tm ? +tm[2] : 0;
+      var offH = off ? +off[1] : 0;
+      var base = Date.UTC(+dm[0], +dm[1]-1, +dm[2], hh, mm);
+      return base - offH * 3600000;   // wall-clock at UTC+offH -> real UTC instant
+    }
+
+    function statusOf(m, now){
+      if(m.ft) return "ft";
+      if(m.kick == null) return "tbd";
+      if(now < m.kick) return "upcoming";
+      if(now < m.kick + LIVE_WINDOW_MS) return "live";
+      return "ended";            // past window, no score recorded yet
+    }
+
+    function fetchData(i){
+      i = i || 0;
+      return fetch(SRC[i], {cache:"no-store"})
+        .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+        .catch(function(e){ if(i+1 < SRC.length) return fetchData(i+1); throw e; });
+    }
+
+    function dayLabel(ms){
+      if(ms == null) return "TBD";
+      return new Date(ms).toLocaleDateString([], {weekday:"short",day:"2-digit",month:"short"});
+    }
+    function kickLabel(ms){
+      if(ms == null) return "TBD";
+      return new Date(ms).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+    }
+    function isToday(ms){
+      if(ms == null) return false;
+      var a = new Date(ms), b = new Date();
+      return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+    }
+
+    function pick(now){
+      var withS = matches.map(function(m){ return {m:m, s:statusOf(m, now)}; });
+      if(tab === "results"){
+        return withS.filter(function(o){ return o.s==="ft"; })
+          .sort(function(a,b){ return (b.m.kick||0)-(a.m.kick||0); });
+      }
+      if(tab === "upcoming"){
+        return withS.filter(function(o){ return o.s==="upcoming"; })
+          .sort(function(a,b){ return (a.m.kick||0)-(b.m.kick||0); });
+      }
+      // live / today: anything live now, or scheduled for today
+      return withS.filter(function(o){ return o.s==="live" || isToday(o.m.kick); })
+        .sort(function(a,b){
+          var rank = {live:0, upcoming:1, ft:2, ended:3, tbd:4};
+          if(rank[a.s] !== rank[b.s]) return rank[a.s]-rank[b.s];
+          return (a.m.kick||0)-(b.m.kick||0);
+        });
+    }
+
+    function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+    function teamRow(name, score, otherScore, played){
+      var cls = "team";
+      if(played && score!=null && otherScore!=null){
+        if(score > otherScore) cls += " win";
+        else if(score < otherScore) cls += " lose";
+      }
+      return '<div class="'+cls+'"><span class="fl">'+flagFor(name)+'</span>'+
+        '<span class="nm">'+esc(name)+'</span>'+
+        (played ? '<span class="sc">'+(score==null?"–":score)+'</span>' : '')+'</div>';
+    }
+
+    function card(o){
+      var m = o.m, s = o.s, played = (s==="ft");
+      var statusHtml, mid = "";
+      if(s === "live"){
+        statusHtml = '<span class="mcard-status live"><span class="dot"></span>Live</span>';
+      } else if(s === "ft"){
+        statusHtml = '<span class="mcard-status ft">Full time</span>';
+      } else if(s === "ended"){
+        statusHtml = '<span class="mcard-status">Ended</span>';
+      } else if(s === "upcoming"){
+        statusHtml = '<span class="mcard-status">Upcoming</span>';
+      } else {
+        statusHtml = '<span class="mcard-status">TBD</span>';
+      }
+      var s1 = m.ft ? m.ft[0] : null, s2 = m.ft ? m.ft[1] : null;
+      var teams = teamRow(m.t1, s1, s2, played) + teamRow(m.t2, s2, s1, played);
+      // For non-finished matches show a central kickoff time instead of scores
+      if(!played){
+        mid = '<div class="mcard-kick">'+ (m.kick!=null ? kickLabel(m.kick) : "TBD") +
+              '<small>'+(s==="live" ? "in progress" : "kick-off (your time)")+'</small></div>';
+      }
+      return '<div class="mcard'+(s==="live"?" live":"")+'">'+
+        '<div class="mcard-top">'+statusHtml+'<span class="mcard-date">'+dayLabel(m.kick)+'</span></div>'+
+        '<div class="mcard-teams">'+teams+'</div>'+
+        mid +
+        '<div class="mcard-foot"><span class="g">'+esc(m.group)+'</span>'+
+          '<span class="ven">'+esc(m.ground)+'</span></div>'+
+      '</div>';
+    }
+
+    function render(){
+      var now = Date.now();
+      // tabs active state
+      var ts = el.tabs.querySelectorAll(".tab");
+      for(var i=0;i<ts.length;i++) ts[i].classList.toggle("on", ts[i].dataset.tab === tab);
+
+      var rows = pick(now);
+      if(!rows.length){
+        var msg = tab==="live" ? "No matches live or scheduled for today."
+          : tab==="upcoming" ? "No upcoming fixtures found."
+          : "No results recorded yet.";
+        el.row.innerHTML = '<div class="board-empty">'+msg+'</div>';
+      } else {
+        el.row.innerHTML = rows.map(card).join("");
+      }
+      el.note.textContent = "Schedule & results from the open openfootball dataset (public domain). " +
+        "Live status is inferred from kick-off time; scores update as the dataset is updated and may lag an in-play match — tap Refresh for the latest.";
+    }
+
+    el.tabs.addEventListener("click", function(e){
+      var b = e.target.closest(".tab"); if(!b) return;
+      tab = b.dataset.tab; render();
+    });
+
+    var didDefault = false;
+    function loadAndRender(){
+      fetchData().then(function(data){
+        var list = (data && data.matches) || [];
+        matches = list.map(function(x){
+          var ft = x.score && x.score.ft ? x.score.ft : null;
+          return {
+            t1: x.team1, t2: x.team2, ft: ft,
+            ht: x.score && x.score.ht ? x.score.ht : null,
+            group: x.group || x.round || "", ground: x.ground || "",
+            date: x.date, time: x.time, kick: parseKickoff(x.date, x.time)
+          };
+        });
+        el.updated.textContent = "Updated " + new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+        if(!didDefault){
+          didDefault = true;
+          if(tab === "live" && !pick(Date.now()).length) tab = "upcoming";
+        }
+        render();
+      }).catch(function(e){
+        el.row.innerHTML = '<div class="board-empty">Couldn\'t load fixtures (' +
+          (e && e.message ? e.message : "network") + '). Tap Refresh to retry.</div>';
+      });
+    }
+
+    el.refresh.addEventListener("click", loadAndRender);
+    timer = setInterval(loadAndRender, REFRESH_MS);
+    loadAndRender();
+  })();
 })();
 </script>
 </body>
