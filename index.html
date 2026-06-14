@@ -175,6 +175,15 @@
     text-decoration:underline;text-underline-offset:2px;padding:0;
   }
   .reset-failed:hover{color:var(--gold)}
+  .proxy-row{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .proxy-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--muted);font-size:13px}
+  .proxy-toggle input{accent-color:var(--gold);width:15px;height:15px}
+  .proxy-input{
+    max-width:560px;background:var(--panel);border:1px solid var(--line);border-radius:6px;
+    color:var(--chalk);padding:9px 12px;font-size:13.5px;font-family:var(--font-body);
+  }
+  .proxy-input::placeholder{color:var(--muted)}
+  .proxy-note{color:var(--muted);font-size:12px;line-height:1.55;max-width:680px}
   /* red notice ribbon */
   .notice-ribbon{
     display:flex;align-items:flex-start;gap:11px;
@@ -505,6 +514,11 @@
       <button class="reset-failed" id="reset-failed" data-i18n="reset_failed">Reset failed list</button>
       <span class="storage-note hidden" id="storage-note" data-i18n="storage_note">Storage unavailable here — favorites &amp; recents last this session only. They persist on the deployed site.</span>
     </div>
+    <div class="proxy-row">
+      <label class="proxy-toggle"><input type="checkbox" id="use-proxy"> <span data-i18n="proxy_label">Try a CORS proxy for blocked streams (experimental)</span></label>
+      <input class="proxy-input hidden" id="proxy-url" type="url" spellcheck="false" placeholder="https://your-worker.example.workers.dev/?url={url}" data-i18n-ph="proxy_ph">
+      <span class="proxy-note hidden" id="proxy-note" data-i18n="proxy_note">You supply the proxy endpoint (put {url} where the stream URL goes). It only fixes CORS-header blocks — not dead or geo-blocked streams — and routes video through whatever server you point it at. See the README for a free Cloudflare Worker you can self-host.</span>
+    </div>
   </section>
 
   <!-- GRID -->
@@ -596,6 +610,8 @@
     httpsOnly: true,
     hideDead: true,
     autoskip: true,
+    useProxy: store.get("wc26:useproxy", false),
+    proxy: store.get("wc26:proxy", ""),
     dead: (function(){
       // Remember failed streams across sessions, but expire after 24h so
       // streams that come back online get retried.
@@ -650,6 +666,10 @@
       autoskip_label:"Auto-skip unavailable streams", reset_failed:"Reset failed list", reset_done:"Failed list cleared",
       skip_toast:"Skipping an unavailable stream… ({n})",
       skip_giveup:"Tried {n} streams in a row and none would play — they're likely offline or blocked in your region/browser. Pick another channel or filter.",
+      proxy_label:"Try a CORS proxy for blocked streams (experimental)",
+      proxy_ph:"https://your-worker.example.workers.dev/?url={url}",
+      proxy_note:"You supply the proxy endpoint (put {url} where the stream URL goes). It only fixes CORS-header blocks — not dead or geo-blocked streams — and routes video through whatever server you point it at. See the README for a free Cloudflare Worker you can self-host.",
+      via_proxy:"via proxy", proxy_retry:"Direct failed — retrying via proxy…",
       tvri_notice:"Heads-up: TVRI Sport HD is an event-driven channel. When no live sport is on, TVRI relays other programming — often TVRI World — on this exact feed, so you may not see sport right now. This app carries the official TVRI Sport stream for FIFA World Cup 2026 coverage, but what actually airs is 100% controlled by TVRI's live schedule, not by this app. It may also be geo-restricted to Indonesia.",
       footer:"<strong>WC26 Streams</strong> is an unofficial, fan-made interface. It is not affiliated with or endorsed by FIFA. It hosts no video content — it plays publicly listed streams from the open-source <a href=\"https://github.com/iptv-org/iptv\" rel=\"noopener\" target=\"_blank\">iptv-org</a> index. Stream availability, quality, and broadcast rights vary by source and region; some streams may be geo-restricted or unauthorized in your country. Use streams you are licensed to watch."
     },
@@ -689,6 +709,10 @@
       autoskip_label:"Lewati otomatis aliran yang tidak tersedia", reset_failed:"Atur ulang daftar gagal", reset_done:"Daftar gagal dibersihkan",
       skip_toast:"Melewati aliran yang tidak tersedia… ({n})",
       skip_giveup:"Mencoba {n} aliran berturut-turut dan tidak ada yang bisa diputar — kemungkinan mati atau diblokir di wilayah/peramban Anda. Pilih saluran atau filter lain.",
+      proxy_label:"Coba proksi CORS untuk aliran yang terblokir (eksperimental)",
+      proxy_ph:"https://worker-anda.example.workers.dev/?url={url}",
+      proxy_note:"Anda menyediakan endpoint proksi (letakkan {url} di posisi URL aliran). Ini hanya memperbaiki blokir header CORS — bukan aliran yang mati atau diblokir wilayah — dan menyalurkan video melalui server mana pun yang Anda tunjuk. Lihat README untuk Cloudflare Worker gratis yang bisa Anda host sendiri.",
+      via_proxy:"via proksi", proxy_retry:"Langsung gagal — mencoba lagi via proksi…",
       tvri_notice:"Perhatian: TVRI Sport HD adalah saluran berbasis acara. Saat tidak ada siaran olahraga langsung, TVRI merelai program lain — sering kali TVRI World — pada aliran yang sama ini, jadi Anda mungkin tidak melihat olahraga sekarang. Aplikasi ini menyalurkan aliran resmi TVRI Sport untuk liputan Piala Dunia FIFA 2026, tetapi apa yang tayang sepenuhnya dikendalikan oleh jadwal langsung TVRI, bukan oleh aplikasi ini. Aliran ini juga mungkin dibatasi hanya untuk wilayah Indonesia.",
       footer:"<strong>WC26 Streams</strong> adalah antarmuka tidak resmi buatan penggemar. Tidak berafiliasi dengan atau didukung oleh FIFA. Aplikasi ini tidak menyimpan konten video — ia memutar aliran yang terdaftar secara publik dari indeks sumber terbuka <a href=\"https://github.com/iptv-org/iptv\" rel=\"noopener\" target=\"_blank\">iptv-org</a>. Ketersediaan, kualitas, dan hak siar aliran berbeda menurut sumber dan wilayah; sebagian aliran mungkin dibatasi wilayah atau tidak berlisensi di negara Anda. Gunakan aliran yang Anda berhak tonton."
     }
@@ -1064,6 +1088,30 @@
   var watchdog = null;        // fires if a stream neither plays nor errors in time
 
   function clearWatchdog(){ if(watchdog){ clearTimeout(watchdog); watchdog = null; } }
+
+  // ---- CORS proxy (opt-in, user-supplied endpoint) ----
+  var currentViaProxy = false;   // is the current attempt going through the proxy?
+  var lastProxyTriedUrl = "";    // so we proxy-retry a given channel at most once
+  function proxify(url){
+    var p = state.proxy.trim();
+    if(!p) return url;
+    return p.indexOf("{url}") > -1
+      ? p.replace("{url}", encodeURIComponent(url))
+      : p + encodeURIComponent(url);
+  }
+  function makeProxyLoader(){
+    var Base = Hls.DefaultConfig.loader;
+    function L(config){ Base.call(this, config);
+      var origLoad = this.load.bind(this);
+      this.load = function(context, cfg, callbacks){
+        if(context && context.url) context.url = proxify(context.url);
+        return origLoad(context, cfg, callbacks);
+      };
+    }
+    L.prototype = Object.create(Base.prototype);
+    L.prototype.constructor = L;
+    return L;
+  }
   var toastTimer = null;
   function showToast(msg){
     var el = $("toast");
@@ -1072,9 +1120,10 @@
   }
   function hideToast(){ $("toast").classList.add("hidden"); }
 
-  function play(ch, autostart){
-    if(!inAutoSkip) skipCount = 0;     // a fresh pick (user or autostart) starts a new hunt
+  function play(ch, autostart, viaProxy){
+    if(!inAutoSkip){ skipCount = 0; lastProxyTriedUrl = ""; }   // fresh pick: new hunt + allow one proxy retry
     chainMuted = !!autostart;
+    currentViaProxy = !!viaProxy;
     clearWatchdog();
     state.current = ch;
     // Muted autostart lets the default channel actually begin on open (browser
@@ -1086,6 +1135,7 @@
       (ch.cc ? (COUNTRY_NAMES[ch.cc]||ch.cc) + " · " : "") +
       (ch.cats[0] ? ch.cats[0] + " · " : "") +
       (ch.https ? "HTTPS" : "HTTP") +
+      (currentViaProxy ? " · " + t("via_proxy") : "") +
       (autostart ? t("muted_hint") : "");
     $("screen-idle").classList.add("hidden");
     $("screen-error").classList.add("hidden");
@@ -1104,14 +1154,17 @@
     // Watchdog: some dead streams hang without ever firing an error. Bail fast.
     watchdog = setTimeout(function(){ fail(t("fail_network")); }, 9000);
 
+    var useProxyNow = currentViaProxy && state.proxy.trim();
     if(window.Hls && Hls.isSupported()){
-      var hls = new Hls({
+      var cfg = {
         manifestLoadingTimeOut: 7000, manifestLoadingMaxRetry: 1,
         levelLoadingTimeOut: 7000, levelLoadingMaxRetry: 1,
         fragLoadingTimeOut: 8000, fragLoadingMaxRetry: 2
-      });
+      };
+      if(useProxyNow) cfg.loader = makeProxyLoader();
+      var hls = new Hls(cfg);
       state.hls = hls;
-      hls.loadSource(ch.url);
+      hls.loadSource(ch.url);   // original URL — HLS.js resolves segments off this; loader proxifies each request
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, function(){ clearWatchdog(); video.play().catch(function(){}); });
       hls.on(Hls.Events.ERROR, function(_, data){
@@ -1125,7 +1178,7 @@
         }
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")){
-      video.src = ch.url;
+      video.src = useProxyNow ? proxify(ch.url) : ch.url;
       video.addEventListener("error", onNativeError);
       video.play().catch(function(){});
     } else {
@@ -1177,6 +1230,18 @@
   function fail(msg){
     clearWatchdog();
     if(state.hls){ try { state.hls.destroy(); } catch(e){} state.hls = null; }
+
+    // Proxy retry: if enabled and we haven't already proxied this channel, try it via the proxy.
+    if(state.useProxy && state.proxy.trim() && state.current && !currentViaProxy
+       && lastProxyTriedUrl !== state.current.url){
+      lastProxyTriedUrl = state.current.url;
+      showToast(t("proxy_retry"));
+      inAutoSkip = true;                 // don't reset the hunt counter for a same-channel retry
+      play(state.current, chainMuted, true);
+      inAutoSkip = false;
+      return;
+    }
+
     if(state.current){ markDead(state.current.url); markDeadTile(state.current.url); }
 
     // Auto-skip: hunt for the next reachable stream instead of showing an error.
@@ -1240,6 +1305,22 @@
   $("https-only").addEventListener("change", function(e){ state.httpsOnly = e.target.checked; applyFilters(); });
   $("hide-dead").addEventListener("change", function(e){ state.hideDead = e.target.checked; applyFilters(); });
   $("autoskip").addEventListener("change", function(e){ state.autoskip = e.target.checked; });
+  (function initProxyUI(){
+    var cb = $("use-proxy"), inp = $("proxy-url"), note = $("proxy-note");
+    cb.checked = state.useProxy;
+    inp.value = state.proxy;
+    function sync(){
+      inp.classList.toggle("hidden", !cb.checked);
+      note.classList.toggle("hidden", !cb.checked);
+    }
+    sync();
+    cb.addEventListener("change", function(){
+      state.useProxy = cb.checked; store.set("wc26:useproxy", cb.checked); sync();
+    });
+    inp.addEventListener("change", function(){
+      state.proxy = inp.value.trim(); store.set("wc26:proxy", state.proxy);
+    });
+  })();
   $("reset-failed").addEventListener("click", function(){
     state.dead = {};
     store.set("wc26:dead", {});

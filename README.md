@@ -22,7 +22,39 @@ https://iptv-org.github.io/iptv/index.m3u
   header overrides and is remembered. Outside Vercel it falls back to the
   browser language.
 
-## Match data source & honest limitations
+## Optional CORS proxy (experimental, off by default)
+Some streams are online but the browser blocks them because the server omits
+CORS headers. The "Try a CORS proxy" toggle in the controls retries a failed
+channel through a proxy you supply, then falls back to auto-skip.
+
+It does NOT fix dead or geo-blocked streams, and it routes video through
+whatever endpoint you configure — so use a proxy you trust/control. Don't rely
+on random public proxies (rate limits, privacy, they rarely stream HLS well).
+
+Self-host a free, reliable one on Cloudflare Workers, then paste its URL
+(with `{url}` where the stream URL goes) into the proxy field:
+
+```js
+// Cloudflare Worker — minimal CORS proxy for HLS. Deploy at workers.dev.
+// Usage in the app's proxy field: https://<your-worker>.workers.dev/?url={url}
+export default {
+  async fetch(request) {
+    const u = new URL(request.url).searchParams.get("url");
+    if (!u) return new Response("missing url", { status: 400 });
+    const upstream = await fetch(u, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const headers = new Headers(upstream.headers);
+    headers.set("Access-Control-Allow-Origin", "*");
+    headers.set("Cache-Control", "no-store");
+    return new Response(upstream.body, { status: upstream.status, headers });
+  }
+};
+```
+
+Note: relaying streams may breach some providers' terms or local rules; only
+proxy streams you're entitled to watch. Cloudflare's free tier has daily
+request limits — fine for personal use, not for heavy traffic.
+
+
 - Schedule + results come from the public-domain **openfootball/worldcup.json**
   dataset, served via the jsDelivr CDN (no API key, CORS-friendly, works from a
   static site). Falls back to raw.githubusercontent if the CDN is unreachable.

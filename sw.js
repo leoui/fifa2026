@@ -1,5 +1,5 @@
 /* WC26 Streams service worker */
-var CACHE = "wc26-v3";
+var CACHE = "wc26-v4";
 var SHELL = ["./", "index.html", "manifest.json", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", function (e) {
