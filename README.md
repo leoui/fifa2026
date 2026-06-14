@@ -14,6 +14,10 @@ https://iptv-org.github.io/iptv/index.m3u
   shell loads offline (streams themselves always need a connection)
 - HLS playback (hls.js), failed-stream marking, auto-skip, random channel
 - Default channel (TVRI Sport HD) auto-loads muted on open
+- Auto-localization: visitors with an Indonesian IP get the UI in Bahasa
+  Indonesia (via Vercel's geo header at /api/geo); manual EN/ID switch in the
+  header overrides and is remembered. Outside Vercel it falls back to the
+  browser language.
 
 ## Match data source & honest limitations
 - Schedule + results come from the public-domain **openfootball/worldcup.json**

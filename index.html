@@ -69,6 +69,15 @@
   }
   .bug-left{display:flex;flex-direction:column;gap:2px}
   .bug-spacer{flex:1}
+  .lang-switch{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .lang-btn{
+    background:transparent;border:0;color:var(--muted);
+    font-family:var(--font-cond);font-weight:700;font-size:13px;
+    letter-spacing:.1em;padding:7px 12px;transition:all .15s;
+  }
+  .lang-btn:hover{color:var(--chalk)}
+  .lang-btn.on{background:var(--gold);color:var(--ink)}
+  .lang-btn + .lang-btn{border-left:1px solid var(--line)}
   .matchday{
     display:flex;align-items:center;gap:10px;
     border:1px solid var(--line);border-radius:6px;
@@ -388,9 +397,13 @@
   <div class="bug">
     <div class="bug-left">
       <div class="bug-mark">WC<span class="yr">26</span> STREAMS</div>
-      <div class="bug-sub">World Cup 2026 · Unofficial Fan Player</div>
+      <div class="bug-sub" data-i18n="app_sub">World Cup 2026 · Unofficial Fan Player</div>
     </div>
     <div class="bug-spacer"></div>
+    <div class="lang-switch" id="lang-switch" role="group" aria-label="Language">
+      <button class="lang-btn" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="id">ID</button>
+    </div>
     <div class="matchday">
       <span class="live-dot" aria-hidden="true"></span>
       <b id="matchday-label">Matchday</b>
@@ -410,12 +423,12 @@
       <video id="video" controls playsinline></video>
       <div class="screen-msg" id="screen-idle">
         <div class="screen-kick">KICK<span class="yr">·</span>OFF</div>
-        <p class="screen-note">Pick a channel below to start watching. Channels load from the open iptv-org index — availability varies by stream and region.</p>
+        <p class="screen-note" data-i18n="idle_note">Pick a channel below to start watching. Channels load from the open iptv-org index — availability varies by stream and region.</p>
       </div>
       <div class="screen-msg screen-err hidden" id="screen-error">
-        <div class="screen-kick">STREAM DOWN</div>
+        <div class="screen-kick" data-i18n="err_title">STREAM DOWN</div>
         <p class="screen-note" id="error-detail">This stream didn't respond.</p>
-        <button class="btn btn-gold" id="btn-skip">Try next channel</button>
+        <button class="btn btn-gold" id="btn-skip" data-i18n="btn_skip">Try next channel</button>
       </div>
     </div>
     <div class="notice-ribbon hidden" id="notice-ribbon" role="alert">
@@ -424,30 +437,30 @@
       <button class="notice-x" id="notice-x" aria-label="Dismiss notice">✕</button>
     </div>
     <div class="now-bar">
-      <span class="now-label">Now tuned</span>
+      <span class="now-label" data-i18n="now_tuned">Now tuned</span>
       <span class="now-name" id="now-name">—</span>
       <span class="now-meta" id="now-meta"></span>
       <span class="now-spacer"></span>
-      <button class="btn" id="btn-fav-current" disabled>☆ Favorite</button>
-      <button class="btn" id="btn-random">Surprise me</button>
+      <button class="btn" id="btn-fav-current" data-i18n="btn_fav" disabled>☆ Favorite</button>
+      <button class="btn" id="btn-random" data-i18n="btn_random">Surprise me</button>
     </div>
   </section>
 
   <!-- MATCH BOARD: live scores + schedule -->
   <section class="board" id="board" aria-label="World Cup matches">
     <div class="board-head">
-      <div class="board-title">Matches</div>
+      <div class="board-title" data-i18n="board_title">Matches</div>
       <div class="board-tabs" id="board-tabs" role="tablist">
-        <button class="tab" data-tab="live" role="tab">Live / Today</button>
-        <button class="tab" data-tab="upcoming" role="tab">Upcoming</button>
-        <button class="tab" data-tab="results" role="tab">Results</button>
+        <button class="tab" data-tab="live" role="tab" data-i18n="tab_live">Live / Today</button>
+        <button class="tab" data-tab="upcoming" role="tab" data-i18n="tab_upcoming">Upcoming</button>
+        <button class="tab" data-tab="results" role="tab" data-i18n="tab_results">Results</button>
       </div>
       <span class="board-spacer"></span>
       <span class="board-updated" id="board-updated"></span>
-      <button class="btn board-refresh" id="board-refresh" aria-label="Refresh matches">↻ Refresh</button>
+      <button class="btn board-refresh" id="board-refresh" aria-label="Refresh matches" data-i18n="board_refresh">↻ Refresh</button>
     </div>
     <div class="match-row" id="match-row" aria-live="polite">
-      <div class="board-loading" id="board-loading"><span class="spin"></span> Loading fixtures…</div>
+      <div class="board-loading" id="board-loading"><span class="spin"></span> <span data-i18n="board_loading">Loading fixtures…</span></div>
     </div>
     <p class="board-note" id="board-note"></p>
   </section>
@@ -455,32 +468,32 @@
   <!-- CONTROLS -->
   <section class="controls" aria-label="Channel filters">
     <div class="controls-row">
-      <input class="search" id="search" type="search" placeholder="Search 10,000+ channels — e.g. ESPN, Telemundo, TSN…" aria-label="Search channels">
+      <input class="search" id="search" type="search" placeholder="Search 10,000+ channels — e.g. ESPN, Telemundo, TSN…" data-i18n-ph="search_ph" aria-label="Search channels">
       <select id="category" aria-label="Filter by category">
-        <option value="">All categories</option>
+        <option value="" data-i18n="all_categories">All categories</option>
       </select>
       <select id="country" aria-label="Filter by country">
-        <option value="">All countries</option>
+        <option value="" data-i18n="all_countries">All countries</option>
       </select>
     </div>
     <div class="pills" id="pills" role="group" aria-label="Quick filters"></div>
     <div class="meta-row">
       <span class="count" id="count">Loading playlist…</span>
-      <label><input type="checkbox" id="https-only" checked> HTTPS streams only (HTTP is blocked on secure sites)</label>
-      <label><input type="checkbox" id="hide-dead" checked> Hide channels that failed</label>
-      <span class="storage-note hidden" id="storage-note">Storage unavailable here — favorites &amp; recents last this session only. They persist on the deployed site.</span>
+      <label><input type="checkbox" id="https-only" checked> <span data-i18n="https_only">HTTPS streams only (HTTP is blocked on secure sites)</span></label>
+      <label><input type="checkbox" id="hide-dead" checked> <span data-i18n="hide_dead">Hide channels that failed</span></label>
+      <span class="storage-note hidden" id="storage-note" data-i18n="storage_note">Storage unavailable here — favorites &amp; recents last this session only. They persist on the deployed site.</span>
     </div>
   </section>
 
   <!-- GRID -->
-  <div class="loading" id="loading"><span class="spin"></span> Fetching full channel index — this one's a few MB, give it a moment</div>
+  <div class="loading" id="loading"><span class="spin"></span> <span data-i18n="loading_index">Fetching full channel index — this one's a few MB, give it a moment</span></div>
   <section class="grid" id="grid" aria-label="Channel list"></section>
-  <div class="empty hidden" id="empty">No channels match. Clear the search or switch filters.</div>
-  <div class="more-wrap"><button class="btn hidden" id="btn-more">Load more channels</button></div>
+  <div class="empty hidden" id="empty" data-i18n="empty_match">No channels match. Clear the search or switch filters.</div>
+  <div class="more-wrap"><button class="btn hidden" id="btn-more" data-i18n="btn_more">Load more channels</button></div>
 </main>
 
 <footer>
-  <p><strong>WC26 Streams</strong> is an unofficial, fan-made interface. It is not affiliated with or endorsed by FIFA. It hosts no video content — it plays publicly listed streams from the open-source <a href="https://github.com/iptv-org/iptv" rel="noopener" target="_blank">iptv-org</a> index. Stream availability, quality, and broadcast rights vary by source and region; some streams may be geo-restricted or unauthorized in your country. Use streams you are licensed to watch.</p>
+  <p data-i18n-html="footer"><strong>WC26 Streams</strong> is an unofficial, fan-made interface. It is not affiliated with or endorsed by FIFA. It hosts no video content — it plays publicly listed streams from the open-source <a href="https://github.com/iptv-org/iptv" rel="noopener" target="_blank">iptv-org</a> index. Stream availability, quality, and broadcast rights vary by source and region; some streams may be geo-restricted or unauthorized in your country. Use streams you are licensed to watch.</p>
 </footer>
 
 <script>
@@ -504,8 +517,7 @@
     { name: "TVRI Sport HD", id: "TVRISport.id@SD",
       url: "https://ott-balancer.tvri.go.id/live/eds/SportHD/hls/SportHD.m3u8",
       logo: "https://upload.wikimedia.org/wikipedia/commons/e/e7/TVRI_Sport_logo.png",
-      cc: "ID", cats: ["Sports"], featured: true,
-      notice: "Heads-up: TVRI Sport HD is an event-driven channel. When no live sport is on, TVRI relays other programming — often TVRI World — on this exact feed, so you may not see sport right now. This app carries the official TVRI Sport stream for FIFA World Cup 2026 coverage, but what actually airs is 100% controlled by TVRI's live schedule, not by this app. It may also be geo-restricted to Indonesia." }
+      cc: "ID", cats: ["Sports"], featured: true, noticeKey: "tvri_notice" }
   ];
   var QUICK = ["US","MX","CA","GB","ES","DE","FR","IT","BR","AR"];
   var RECENT_MAX = 12;
@@ -565,8 +577,133 @@
     favs: store.get("wc26:favs", {}),      // key -> true
     recent: store.get("wc26:recent", []),  // [key,...] newest first
     current: null,
-    hls: null
+    hls: null,
+    lang: "en"
   };
+
+  var rerenderHooks = [];   // board etc. register their render fn here for language switches
+
+  /* ===================== I18N ===================== */
+  var I18N = {
+    en: {
+      app_sub:"World Cup 2026 · Unofficial Fan Player",
+      md_kickoff:"Kick-off in {n} day{s}", md_concluded:"Tournament concluded", md_live:"Live · Matchday {n}",
+      ticker:"48 teams · 104 matches · 16 host cities · 3 host nations {flags} · Opening: Estadio Azteca, Mexico City · Final: July 19, New York / New Jersey · ",
+      idle_note:"Pick a channel below to start watching. Channels load from the open iptv-org index — availability varies by stream and region.",
+      err_title:"STREAM DOWN", btn_skip:"Try next channel",
+      now_tuned:"Now tuned", btn_fav:"☆ Favorite", fav_on:"★ Favorited", btn_random:"Surprise me",
+      board_title:"Matches", tab_live:"Live / Today", tab_upcoming:"Upcoming", tab_results:"Results",
+      board_refresh:"↻ Refresh", board_loading:"Loading fixtures…", board_updated:"Updated {t}",
+      search_ph:"Search 10,000+ channels — e.g. ESPN, Telemundo, TSN…",
+      all_categories:"All categories", all_countries:"All countries",
+      https_only:"HTTPS streams only (HTTP is blocked on secure sites)",
+      hide_dead:"Hide channels that failed",
+      storage_note:"Storage unavailable here — favorites & recents last this session only. They persist on the deployed site.",
+      loading_index:"Fetching full channel index — this one's a few MB, give it a moment",
+      btn_more:"Load more channels",
+      count:"{a} of {b} channels", featured_count:"{n} featured channel(s) — couldn't load the full index ({e}). Reload to retry.",
+      empty_fav:"No favorites yet — tap the ☆ on any channel to pin it here.",
+      empty_recent:"Nothing watched yet — recently played channels will appear here.",
+      empty_match:"No channels match. Clear the search or switch filters.",
+      st_live:"Live", st_ft:"Full time", st_ended:"Ended", st_upcoming:"Upcoming", st_tbd:"TBD",
+      kick_inprogress:"in progress", kick_yourtime:"kick-off (your time)",
+      board_empty_live:"No matches live or scheduled for today.",
+      board_empty_upcoming:"No upcoming fixtures found.",
+      board_empty_results:"No results recorded yet.",
+      board_note:"Schedule & results from the open openfootball dataset (public domain). Live status is inferred from kick-off time; scores update as the dataset is updated and may lag an in-play match — tap Refresh for the latest.",
+      board_err:"Couldn't load fixtures ({e}). Tap Refresh to retry.",
+      muted_hint:" · 🔇 muted — tap the speaker to unmute",
+      fail_mixed:"This is an HTTP stream and the page is HTTPS — the browser blocks it (mixed content). Pick an HTTPS channel, or untick “HTTPS streams only” when running the app locally over http.",
+      fail_network:"The stream didn't respond. It's likely offline, geo-blocked in your region, or it refuses browser playback (CORS). This is a limitation of the source, not the app.",
+      fail_native:"The stream didn't load — likely offline, geo-blocked, or blocked by CORS.",
+      fail_nohls:"This browser can't play HLS streams.",
+      fail_nomore:"No more reachable channels in this filter. Try another country or clear filters.",
+      tvri_notice:"Heads-up: TVRI Sport HD is an event-driven channel. When no live sport is on, TVRI relays other programming — often TVRI World — on this exact feed, so you may not see sport right now. This app carries the official TVRI Sport stream for FIFA World Cup 2026 coverage, but what actually airs is 100% controlled by TVRI's live schedule, not by this app. It may also be geo-restricted to Indonesia.",
+      footer:"<strong>WC26 Streams</strong> is an unofficial, fan-made interface. It is not affiliated with or endorsed by FIFA. It hosts no video content — it plays publicly listed streams from the open-source <a href=\"https://github.com/iptv-org/iptv\" rel=\"noopener\" target=\"_blank\">iptv-org</a> index. Stream availability, quality, and broadcast rights vary by source and region; some streams may be geo-restricted or unauthorized in your country. Use streams you are licensed to watch."
+    },
+    id: {
+      app_sub:"Piala Dunia 2026 · Pemutar Penggemar Tidak Resmi",
+      md_kickoff:"Kick-off dalam {n} hari", md_concluded:"Turnamen telah selesai", md_live:"Langsung · Hari Pertandingan {n}",
+      ticker:"48 tim · 104 pertandingan · 16 kota tuan rumah · 3 negara tuan rumah {flags} · Pembukaan: Estadio Azteca, Mexico City · Final: 19 Juli, New York / New Jersey · ",
+      idle_note:"Pilih saluran di bawah untuk mulai menonton. Saluran dimuat dari indeks terbuka iptv-org — ketersediaan berbeda menurut aliran dan wilayah.",
+      err_title:"ALIRAN TERPUTUS", btn_skip:"Coba saluran berikutnya",
+      now_tuned:"Sedang disetel", btn_fav:"☆ Favorit", fav_on:"★ Difavoritkan", btn_random:"Kejutkan saya",
+      board_title:"Pertandingan", tab_live:"Langsung / Hari Ini", tab_upcoming:"Akan Datang", tab_results:"Hasil",
+      board_refresh:"↻ Segarkan", board_loading:"Memuat jadwal…", board_updated:"Diperbarui {t}",
+      search_ph:"Cari 10.000+ saluran — mis. ESPN, Telemundo, TSN…",
+      all_categories:"Semua kategori", all_countries:"Semua negara",
+      https_only:"Hanya aliran HTTPS (HTTP diblokir di situs aman)",
+      hide_dead:"Sembunyikan saluran yang gagal",
+      storage_note:"Penyimpanan tidak tersedia di sini — favorit & riwayat hanya bertahan selama sesi ini. Keduanya tersimpan di situs yang sudah dideploy.",
+      loading_index:"Mengambil indeks saluran lengkap — ukurannya beberapa MB, mohon tunggu sebentar",
+      btn_more:"Muat lebih banyak saluran",
+      count:"{a} dari {b} saluran", featured_count:"{n} saluran unggulan — gagal memuat indeks lengkap ({e}). Muat ulang untuk mencoba lagi.",
+      empty_fav:"Belum ada favorit — ketuk ☆ pada saluran mana pun untuk menyematkannya di sini.",
+      empty_recent:"Belum ada yang ditonton — saluran yang baru diputar akan muncul di sini.",
+      empty_match:"Tidak ada saluran yang cocok. Hapus pencarian atau ganti filter.",
+      st_live:"Langsung", st_ft:"Selesai", st_ended:"Berakhir", st_upcoming:"Akan Datang", st_tbd:"TBA",
+      kick_inprogress:"sedang berlangsung", kick_yourtime:"kick-off (waktu Anda)",
+      board_empty_live:"Tidak ada pertandingan langsung atau terjadwal hari ini.",
+      board_empty_upcoming:"Tidak ada jadwal mendatang.",
+      board_empty_results:"Belum ada hasil yang tercatat.",
+      board_note:"Jadwal & hasil dari dataset terbuka openfootball (domain publik). Status langsung diperkirakan dari waktu kick-off; skor diperbarui saat dataset diperbarui dan bisa tertinggal dari pertandingan berjalan — ketuk Segarkan untuk yang terbaru.",
+      board_err:"Gagal memuat jadwal ({e}). Ketuk Segarkan untuk mencoba lagi.",
+      muted_hint:" · 🔇 dibisukan — ketuk ikon speaker untuk menyalakan suara",
+      fail_mixed:"Ini aliran HTTP sedangkan halaman ini HTTPS — peramban memblokirnya (konten campuran). Pilih saluran HTTPS, atau hilangkan centang “Hanya aliran HTTPS” saat menjalankan aplikasi secara lokal melalui http.",
+      fail_network:"Aliran tidak merespons. Kemungkinan sedang mati, diblokir wilayah (geo-block), atau menolak diputar di peramban (CORS). Ini keterbatasan sumber, bukan aplikasi.",
+      fail_native:"Aliran gagal dimuat — kemungkinan mati, diblokir wilayah, atau diblokir CORS.",
+      fail_nohls:"Peramban ini tidak dapat memutar aliran HLS.",
+      fail_nomore:"Tidak ada lagi saluran yang dapat dijangkau pada filter ini. Coba negara lain atau hapus filter.",
+      tvri_notice:"Perhatian: TVRI Sport HD adalah saluran berbasis acara. Saat tidak ada siaran olahraga langsung, TVRI merelai program lain — sering kali TVRI World — pada aliran yang sama ini, jadi Anda mungkin tidak melihat olahraga sekarang. Aplikasi ini menyalurkan aliran resmi TVRI Sport untuk liputan Piala Dunia FIFA 2026, tetapi apa yang tayang sepenuhnya dikendalikan oleh jadwal langsung TVRI, bukan oleh aplikasi ini. Aliran ini juga mungkin dibatasi hanya untuk wilayah Indonesia.",
+      footer:"<strong>WC26 Streams</strong> adalah antarmuka tidak resmi buatan penggemar. Tidak berafiliasi dengan atau didukung oleh FIFA. Aplikasi ini tidak menyimpan konten video — ia memutar aliran yang terdaftar secara publik dari indeks sumber terbuka <a href=\"https://github.com/iptv-org/iptv\" rel=\"noopener\" target=\"_blank\">iptv-org</a>. Ketersediaan, kualitas, dan hak siar aliran berbeda menurut sumber dan wilayah; sebagian aliran mungkin dibatasi wilayah atau tidak berlisensi di negara Anda. Gunakan aliran yang Anda berhak tonton."
+    }
+  };
+  function t(key, vars){
+    var dict = I18N[state.lang] || I18N.en;
+    var s = dict[key] != null ? dict[key] : (I18N.en[key] != null ? I18N.en[key] : key);
+    if(vars) for(var k in vars) s = s.replace(new RegExp("\\{"+k+"\\}","g"), vars[k]);
+    return s;
+  }
+  function applyI18n(){
+    document.documentElement.lang = state.lang;
+    var nodes = document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<nodes.length;i++) nodes[i].textContent = t(nodes[i].getAttribute("data-i18n"));
+    var ph = document.querySelectorAll("[data-i18n-ph]");
+    for(var j=0;j<ph.length;j++) ph[j].setAttribute("placeholder", t(ph[j].getAttribute("data-i18n-ph")));
+    var hp = document.querySelectorAll("[data-i18n-html]");
+    for(var h=0;h<hp.length;h++) hp[h].innerHTML = t(hp[h].getAttribute("data-i18n-html"));
+    var ls = document.querySelectorAll(".lang-btn");
+    for(var b=0;b<ls.length;b++) ls[b].classList.toggle("on", ls[b].getAttribute("data-lang") === state.lang);
+  }
+  function setLang(lang, persist){
+    if(!I18N[lang]) lang = "en";
+    state.lang = lang;
+    if(persist) store.set("wc26:lang", lang);
+    applyI18n();
+    initHeader();
+    if(state.channels.length) applyFilters();      // refresh count/empty + fav button labels
+    syncFavCurrentBtn();
+    if(state.current) showNotice(state.current);
+    for(var i=0;i<rerenderHooks.length;i++){ try { rerenderHooks[i](); } catch(e){} }
+  }
+  // resolve initial language: saved preference > browser hint (geo refines async)
+  (function initLang(){
+    var saved = store.get("wc26:lang", "");
+    if(saved){ state.lang = saved; }
+    else if((navigator.language||"").toLowerCase().indexOf("id") === 0){ state.lang = "id"; }
+    document.getElementById("lang-switch").addEventListener("click", function(e){
+      var b = e.target.closest(".lang-btn"); if(!b) return;
+      setLang(b.getAttribute("data-lang"), true);
+    });
+  })();
+  // refine by IP country via the Vercel geo endpoint (no override if user already chose)
+  (function geoDetect(){
+    if(store.get("wc26:lang", "")) return;   // respect explicit choice
+    fetch("/api/geo", {cache:"no-store"})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ if(d && d.country === "ID" && state.lang !== "id") setLang("id", false); })
+      .catch(function(){ /* not on Vercel / offline — keep browser-based choice */ });
+  })();
 
   var $ = function(id){ return document.getElementById(id); };
   var video = $("video"), grid = $("grid");
@@ -579,24 +716,25 @@
     var A = 0x1F1E6;
     return String.fromCodePoint(A + cc.charCodeAt(0) - 65, A + cc.charCodeAt(1) - 65);
   }
-  (function initHeader(){
+  function initHeader(){
     var now = Date.now(), label;
     if(now < WC_START){
       var d = Math.ceil((WC_START - now) / 864e5);
-      label = "Kick-off in " + d + " day" + (d===1?"":"s");
+      label = t("md_kickoff", {n:d, s:(d===1?"":"s")});
     } else if (now > WC_END + 864e5){
-      label = "Tournament concluded";
+      label = t("md_concluded");
     } else {
       var day = Math.floor((now - WC_START) / 864e5) + 1;
-      label = "Live · Matchday " + day;
+      label = t("md_live", {n:day});
     }
     $("matchday-label").textContent = label;
 
-    var facts = "48 teams · 104 matches · 16 host cities · 3 host nations " +
-      flagEmoji("CA") + " " + flagEmoji("US") + " " + flagEmoji("MX") +
-      " · Opening: Estadio Azteca, Mexico City · Final: July 19, New York / New Jersey · ";
+    var flags = flagEmoji("CA") + " " + flagEmoji("US") + " " + flagEmoji("MX");
+    var facts = t("ticker", {flags:flags});
     $("ticker").innerHTML = (facts + facts).replace(/·/g, "<em>·</em>");
-  })();
+  }
+  applyI18n();
+  initHeader();
 
   if(!store.persistent) $("storage-note").classList.remove("hidden");
 
@@ -633,7 +771,7 @@
       return {
         name: c.name, logo: c.logo || "", id: c.id || "", url: c.url,
         cc: c.cc || "", cats: (c.cats || []).slice(),
-        https: c.url.indexOf("https://") === 0, featured: true, notice: c.notice || ""
+        https: c.url.indexOf("https://") === 0, featured: true, noticeKey: c.noticeKey || ""
       };
     });
   }
@@ -663,8 +801,7 @@
         buildFilters();
         $("loading").classList.add("hidden");
         applyFilters();
-        $("count").innerHTML = "<b>" + state.channels.length + "</b> featured channel(s) — " +
-          "couldn't load the full index (" + escHtml(e.message) + "). Reload to retry.";
+        $("count").innerHTML = t("featured_count", {n:"<b>"+state.channels.length+"</b>", e:escHtml(e.message)});
         autostartDefault();
       });
   }
@@ -781,13 +918,13 @@
     state.shown = 0;
     grid.innerHTML = "";
     renderMore();
-    $("count").innerHTML = "<b>" + state.filtered.length.toLocaleString() + "</b> of " + state.channels.length.toLocaleString() + " channels";
+    $("count").innerHTML = t("count", {a:"<b>"+state.filtered.length.toLocaleString()+"</b>", b:state.channels.length.toLocaleString()});
     $("empty").classList.toggle("hidden", state.filtered.length > 0);
     $("empty").textContent = state.view === "fav" && !Object.keys(state.favs).length
-      ? "No favorites yet — tap the ☆ on any channel to pin it here."
+      ? t("empty_fav")
       : state.view === "recent" && !state.recent.length
-        ? "Nothing watched yet — recently played channels will appear here."
-        : "No channels match. Clear the search or switch filters.";
+        ? t("empty_recent")
+        : t("empty_match");
   }
 
   /* ---------- grid ---------- */
@@ -857,10 +994,10 @@
   }
   function syncFavCurrentBtn(){
     var b = $("btn-fav-current");
-    if(!state.current){ b.disabled = true; b.textContent = "☆ Favorite"; return; }
+    if(!state.current){ b.disabled = true; b.textContent = t("btn_fav"); return; }
     b.disabled = false;
     var on = !!state.favs[chKey(state.current)];
-    b.textContent = on ? "★ Favorited" : "☆ Favorite";
+    b.textContent = on ? t("fav_on") : t("btn_fav");
   }
   function addRecent(ch){
     var k = chKey(ch);
@@ -890,7 +1027,7 @@
       (ch.cc ? (COUNTRY_NAMES[ch.cc]||ch.cc) + " · " : "") +
       (ch.cats[0] ? ch.cats[0] + " · " : "") +
       (ch.https ? "HTTPS" : "HTTP") +
-      (autostart ? " · 🔇 muted — tap the speaker to unmute" : "");
+      (autostart ? t("muted_hint") : "");
     $("screen-idle").classList.add("hidden");
     $("screen-error").classList.add("hidden");
     showNotice(ch);
@@ -899,7 +1036,7 @@
     document.getElementById("stage").scrollIntoView({block:"start"});
 
     if(!ch.https && location.protocol === "https:"){
-      return fail("This is an HTTP stream and the page is HTTPS — the browser blocks it (mixed content). Pick an HTTPS channel, or untick \u201CHTTPS streams only\u201D when running the app locally over http.");
+      return fail(t("fail_mixed"));
     }
 
     if(state.hls){ state.hls.destroy(); state.hls = null; }
@@ -914,7 +1051,7 @@
       hls.on(Hls.Events.ERROR, function(_, data){
         if(!data.fatal) return;
         if(data.type === Hls.ErrorTypes.NETWORK_ERROR){
-          fail("The stream didn't respond. It's likely offline, geo-blocked in your region, or it refuses browser playback (CORS). This is a limitation of the source, not the app.");
+          fail(t("fail_network"));
         } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR){
           hls.recoverMediaError();
         } else {
@@ -926,23 +1063,24 @@
       video.addEventListener("error", onNativeError);
       video.play().catch(function(){});
     } else {
-      fail("This browser can't play HLS streams.");
+      fail(t("fail_nohls"));
     }
   }
   function onNativeError(){
     video.removeEventListener("error", onNativeError);
-    fail("The stream didn't load — likely offline, geo-blocked, or blocked by CORS.");
+    fail(t("fail_native"));
   }
   // Per-channel warning ribbon (e.g. TVRI Sport relaying non-sport content)
   var dismissedNotices = {};
   function showNotice(ch){
     var ribbon = $("notice-ribbon");
     var key = ch.id || ch.url;
-    if(ch.notice && !dismissedNotices[key]){
-      var t = ch.notice, cut = t.indexOf(". ");
+    var msg = ch.noticeKey ? t(ch.noticeKey) : "";
+    if(msg && !dismissedNotices[key]){
+      var cut = msg.indexOf(". ");
       $("notice-text").innerHTML = cut > -1
-        ? "<b>" + escHtml(t.slice(0, cut+1)) + "</b> " + escHtml(t.slice(cut+2))
-        : escHtml(t);
+        ? "<b>" + escHtml(msg.slice(0, cut+1)) + "</b> " + escHtml(msg.slice(cut+2))
+        : escHtml(msg);
       ribbon.classList.remove("hidden");
     } else {
       ribbon.classList.add("hidden");
@@ -978,7 +1116,7 @@
       var c = state.filtered[(i+step) % state.filtered.length];
       if(!state.dead[c.url]){ play(c); return; }
     }
-    fail("No more reachable channels in this filter. Try another country or clear filters.");
+    fail(t("fail_nomore"));
   }
   function playRandom(){
     var pool = state.filtered.filter(function(c){ return !state.dead[c.url]; });
@@ -1150,22 +1288,22 @@
       var m = o.m, s = o.s, played = (s==="ft");
       var statusHtml, mid = "";
       if(s === "live"){
-        statusHtml = '<span class="mcard-status live"><span class="dot"></span>Live</span>';
+        statusHtml = '<span class="mcard-status live"><span class="dot"></span>'+t("st_live")+'</span>';
       } else if(s === "ft"){
-        statusHtml = '<span class="mcard-status ft">Full time</span>';
+        statusHtml = '<span class="mcard-status ft">'+t("st_ft")+'</span>';
       } else if(s === "ended"){
-        statusHtml = '<span class="mcard-status">Ended</span>';
+        statusHtml = '<span class="mcard-status">'+t("st_ended")+'</span>';
       } else if(s === "upcoming"){
-        statusHtml = '<span class="mcard-status">Upcoming</span>';
+        statusHtml = '<span class="mcard-status">'+t("st_upcoming")+'</span>';
       } else {
-        statusHtml = '<span class="mcard-status">TBD</span>';
+        statusHtml = '<span class="mcard-status">'+t("st_tbd")+'</span>';
       }
       var s1 = m.ft ? m.ft[0] : null, s2 = m.ft ? m.ft[1] : null;
       var teams = teamRow(m.t1, s1, s2, played) + teamRow(m.t2, s2, s1, played);
       // For non-finished matches show a central kickoff time instead of scores
       if(!played){
         mid = '<div class="mcard-kick">'+ (m.kick!=null ? kickLabel(m.kick) : "TBD") +
-              '<small>'+(s==="live" ? "in progress" : "kick-off (your time)")+'</small></div>';
+              '<small>'+(s==="live" ? t("kick_inprogress") : t("kick_yourtime"))+'</small></div>';
       }
       return '<div class="mcard'+(s==="live"?" live":"")+'">'+
         '<div class="mcard-top">'+statusHtml+'<span class="mcard-date">'+dayLabel(m.kick)+'</span></div>'+
@@ -1184,15 +1322,14 @@
 
       var rows = pick(now);
       if(!rows.length){
-        var msg = tab==="live" ? "No matches live or scheduled for today."
-          : tab==="upcoming" ? "No upcoming fixtures found."
-          : "No results recorded yet.";
+        var msg = tab==="live" ? t("board_empty_live")
+          : tab==="upcoming" ? t("board_empty_upcoming")
+          : t("board_empty_results");
         el.row.innerHTML = '<div class="board-empty">'+msg+'</div>';
       } else {
         el.row.innerHTML = rows.map(card).join("");
       }
-      el.note.textContent = "Schedule & results from the open openfootball dataset (public domain). " +
-        "Live status is inferred from kick-off time; scores update as the dataset is updated and may lag an in-play match — tap Refresh for the latest.";
+      el.note.textContent = t("board_note");
     }
 
     el.tabs.addEventListener("click", function(e){
@@ -1213,20 +1350,20 @@
             date: x.date, time: x.time, kick: parseKickoff(x.date, x.time)
           };
         });
-        el.updated.textContent = "Updated " + new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+        el.updated.textContent = t("board_updated", {t:new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})});
         if(!didDefault){
           didDefault = true;
           if(tab === "live" && !pick(Date.now()).length) tab = "upcoming";
         }
         render();
       }).catch(function(e){
-        el.row.innerHTML = '<div class="board-empty">Couldn\'t load fixtures (' +
-          (e && e.message ? e.message : "network") + '). Tap Refresh to retry.</div>';
+        el.row.innerHTML = '<div class="board-empty">'+esc(t("board_err",{e:(e&&e.message?e.message:"network")}))+'</div>';
       });
     }
 
     el.refresh.addEventListener("click", loadAndRender);
     timer = setInterval(loadAndRender, REFRESH_MS);
+    rerenderHooks.push(render);
     loadAndRender();
   })();
 })();
