@@ -156,6 +156,25 @@
     padding:12px 16px;background:var(--panel);
     border-top:1px solid var(--line);
   }
+  /* auto-skip toast */
+  .toast{
+    position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
+    background:rgba(11,15,26,.92);border:1px solid var(--gold);
+    color:var(--chalk);font-family:var(--font-cond);font-weight:600;
+    font-size:13px;letter-spacing:.06em;padding:8px 16px;border-radius:999px;
+    display:flex;align-items:center;gap:9px;z-index:5;max-width:90%;
+    box-shadow:0 6px 24px rgba(0,0,0,.4);
+  }
+  .toast::before{
+    content:"";width:13px;height:13px;border-radius:50%;flex:none;
+    border:2px solid rgba(239,184,50,.35);border-top-color:var(--gold);
+    animation:spin .8s linear infinite;
+  }
+  .reset-failed{
+    background:none;border:0;color:var(--muted);font-size:12.5px;
+    text-decoration:underline;text-underline-offset:2px;padding:0;
+  }
+  .reset-failed:hover{color:var(--gold)}
   /* red notice ribbon */
   .notice-ribbon{
     display:flex;align-items:flex-start;gap:11px;
@@ -431,6 +450,7 @@
         <button class="btn btn-gold" id="btn-skip" data-i18n="btn_skip">Try next channel</button>
       </div>
     </div>
+    <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
     <div class="notice-ribbon hidden" id="notice-ribbon" role="alert">
       <span class="notice-ico" aria-hidden="true">⚠</span>
       <span class="notice-text" id="notice-text"></span>
@@ -481,6 +501,8 @@
       <span class="count" id="count">Loading playlist…</span>
       <label><input type="checkbox" id="https-only" checked> <span data-i18n="https_only">HTTPS streams only (HTTP is blocked on secure sites)</span></label>
       <label><input type="checkbox" id="hide-dead" checked> <span data-i18n="hide_dead">Hide channels that failed</span></label>
+      <label><input type="checkbox" id="autoskip" checked> <span data-i18n="autoskip_label">Auto-skip unavailable streams</span></label>
+      <button class="reset-failed" id="reset-failed" data-i18n="reset_failed">Reset failed list</button>
       <span class="storage-note hidden" id="storage-note" data-i18n="storage_note">Storage unavailable here — favorites &amp; recents last this session only. They persist on the deployed site.</span>
     </div>
   </section>
@@ -573,7 +595,14 @@
     view: "all",            // all | fav | recent
     httpsOnly: true,
     hideDead: true,
-    dead: {},               // url -> true (session only; streams flap, don't persist)
+    autoskip: true,
+    dead: (function(){
+      // Remember failed streams across sessions, but expire after 24h so
+      // streams that come back online get retried.
+      var raw = store.get("wc26:dead", {}), now = Date.now(), out = {};
+      for(var u in raw){ if(typeof raw[u] === "number" && now - raw[u] < 864e5) out[u] = raw[u]; }
+      return out;
+    })(),               // url -> timestamp of last failure (persisted, 24h TTL)
     favs: store.get("wc26:favs", {}),      // key -> true
     recent: store.get("wc26:recent", []),  // [key,...] newest first
     current: null,
@@ -618,6 +647,9 @@
       fail_native:"The stream didn't load — likely offline, geo-blocked, or blocked by CORS.",
       fail_nohls:"This browser can't play HLS streams.",
       fail_nomore:"No more reachable channels in this filter. Try another country or clear filters.",
+      autoskip_label:"Auto-skip unavailable streams", reset_failed:"Reset failed list", reset_done:"Failed list cleared",
+      skip_toast:"Skipping an unavailable stream… ({n})",
+      skip_giveup:"Tried {n} streams in a row and none would play — they're likely offline or blocked in your region/browser. Pick another channel or filter.",
       tvri_notice:"Heads-up: TVRI Sport HD is an event-driven channel. When no live sport is on, TVRI relays other programming — often TVRI World — on this exact feed, so you may not see sport right now. This app carries the official TVRI Sport stream for FIFA World Cup 2026 coverage, but what actually airs is 100% controlled by TVRI's live schedule, not by this app. It may also be geo-restricted to Indonesia.",
       footer:"<strong>WC26 Streams</strong> is an unofficial, fan-made interface. It is not affiliated with or endorsed by FIFA. It hosts no video content — it plays publicly listed streams from the open-source <a href=\"https://github.com/iptv-org/iptv\" rel=\"noopener\" target=\"_blank\">iptv-org</a> index. Stream availability, quality, and broadcast rights vary by source and region; some streams may be geo-restricted or unauthorized in your country. Use streams you are licensed to watch."
     },
@@ -654,6 +686,9 @@
       fail_native:"Aliran gagal dimuat — kemungkinan mati, diblokir wilayah, atau diblokir CORS.",
       fail_nohls:"Peramban ini tidak dapat memutar aliran HLS.",
       fail_nomore:"Tidak ada lagi saluran yang dapat dijangkau pada filter ini. Coba negara lain atau hapus filter.",
+      autoskip_label:"Lewati otomatis aliran yang tidak tersedia", reset_failed:"Atur ulang daftar gagal", reset_done:"Daftar gagal dibersihkan",
+      skip_toast:"Melewati aliran yang tidak tersedia… ({n})",
+      skip_giveup:"Mencoba {n} aliran berturut-turut dan tidak ada yang bisa diputar — kemungkinan mati atau diblokir di wilayah/peramban Anda. Pilih saluran atau filter lain.",
       tvri_notice:"Perhatian: TVRI Sport HD adalah saluran berbasis acara. Saat tidak ada siaran olahraga langsung, TVRI merelai program lain — sering kali TVRI World — pada aliran yang sama ini, jadi Anda mungkin tidak melihat olahraga sekarang. Aplikasi ini menyalurkan aliran resmi TVRI Sport untuk liputan Piala Dunia FIFA 2026, tetapi apa yang tayang sepenuhnya dikendalikan oleh jadwal langsung TVRI, bukan oleh aplikasi ini. Aliran ini juga mungkin dibatasi hanya untuk wilayah Indonesia.",
       footer:"<strong>WC26 Streams</strong> adalah antarmuka tidak resmi buatan penggemar. Tidak berafiliasi dengan atau didukung oleh FIFA. Aplikasi ini tidak menyimpan konten video — ia memutar aliran yang terdaftar secara publik dari indeks sumber terbuka <a href=\"https://github.com/iptv-org/iptv\" rel=\"noopener\" target=\"_blank\">iptv-org</a>. Ketersediaan, kualitas, dan hak siar aliran berbeda menurut sumber dan wilayah; sebagian aliran mungkin dibatasi wilayah atau tidak berlisensi di negara Anda. Gunakan aliran yang Anda berhak tonton."
     }
@@ -1006,7 +1041,12 @@
     if(state.recent.length > RECENT_MAX) state.recent.length = RECENT_MAX;
     store.set("wc26:recent", state.recent);
   }
-  video.addEventListener("playing", function(){ if(state.current) addRecent(state.current); });
+  video.addEventListener("playing", function(){
+    clearWatchdog();
+    skipCount = 0;
+    hideToast();
+    if(state.current) addRecent(state.current);
+  });
   video.addEventListener("volumechange", function(){
     if(!video.muted && state.current){
       var meta = $("now-meta").textContent;
@@ -1016,7 +1056,26 @@
   });
 
   /* ---------- player ---------- */
+  // ---- auto-skip past unavailable streams ----
+  var MAX_SKIPS = 8;          // cap so we never spin forever
+  var skipCount = 0;          // failures in the current hunt
+  var inAutoSkip = false;     // true while chaining to the next candidate
+  var chainMuted = false;     // preserve muted state through the hunt
+  var watchdog = null;        // fires if a stream neither plays nor errors in time
+
+  function clearWatchdog(){ if(watchdog){ clearTimeout(watchdog); watchdog = null; } }
+  var toastTimer = null;
+  function showToast(msg){
+    var el = $("toast");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+  }
+  function hideToast(){ $("toast").classList.add("hidden"); }
+
   function play(ch, autostart){
+    if(!inAutoSkip) skipCount = 0;     // a fresh pick (user or autostart) starts a new hunt
+    chainMuted = !!autostart;
+    clearWatchdog();
     state.current = ch;
     // Muted autostart lets the default channel actually begin on open (browser
     // autoplay policy blocks sound until interaction). A real channel click is
@@ -1042,12 +1101,19 @@
     if(state.hls){ state.hls.destroy(); state.hls = null; }
     video.removeAttribute("src"); video.load();
 
+    // Watchdog: some dead streams hang without ever firing an error. Bail fast.
+    watchdog = setTimeout(function(){ fail(t("fail_network")); }, 9000);
+
     if(window.Hls && Hls.isSupported()){
-      var hls = new Hls({ manifestLoadingTimeOut: 12000, manifestLoadingMaxRetry: 1, levelLoadingMaxRetry: 1, fragLoadingMaxRetry: 2 });
+      var hls = new Hls({
+        manifestLoadingTimeOut: 7000, manifestLoadingMaxRetry: 1,
+        levelLoadingTimeOut: 7000, levelLoadingMaxRetry: 1,
+        fragLoadingTimeOut: 8000, fragLoadingMaxRetry: 2
+      });
       state.hls = hls;
       hls.loadSource(ch.url);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, function(){ video.play().catch(function(){}); });
+      hls.on(Hls.Events.MANIFEST_PARSED, function(){ clearWatchdog(); video.play().catch(function(){}); });
       hls.on(Hls.Events.ERROR, function(_, data){
         if(!data.fatal) return;
         if(data.type === Hls.ErrorTypes.NETWORK_ERROR){
@@ -1091,11 +1157,46 @@
     if(state.current) dismissedNotices[state.current.id || state.current.url] = true;
   });
 
+  function markDead(url){
+    if(!url) return;
+    state.dead[url] = Date.now();
+    store.set("wc26:dead", state.dead);
+  }
+  function nextCandidate(){
+    if(!state.filtered.length) return null;
+    var i = -1;
+    if(state.current){
+      for(var k=0;k<state.filtered.length;k++) if(state.filtered[k].url === state.current.url){ i = k; break; }
+    }
+    for(var step=1; step<=state.filtered.length; step++){
+      var c = state.filtered[(i+step) % state.filtered.length];
+      if(!state.dead[c.url] && (c.https || location.protocol !== "https:")) return c;
+    }
+    return null;
+  }
   function fail(msg){
-    if(state.current) state.dead[state.current.url] = true;
-    $("error-detail").textContent = msg;
+    clearWatchdog();
+    if(state.hls){ try { state.hls.destroy(); } catch(e){} state.hls = null; }
+    if(state.current){ markDead(state.current.url); markDeadTile(state.current.url); }
+
+    // Auto-skip: hunt for the next reachable stream instead of showing an error.
+    if(state.autoskip && skipCount < MAX_SKIPS){
+      var next = nextCandidate();
+      if(next){
+        skipCount++;
+        showToast(t("skip_toast", {n:skipCount}));
+        inAutoSkip = true;
+        play(next, chainMuted);
+        inAutoSkip = false;
+        return;
+      }
+    }
+    // Out of options (or auto-skip off): show the error.
+    hideToast();
+    $("error-detail").textContent = (state.autoskip && skipCount)
+      ? t("skip_giveup", {n:skipCount})
+      : msg;
     $("screen-error").classList.remove("hidden");
-    markDeadTile(state.current && state.current.url);
   }
   function markPlayingTile(url){
     var tiles = grid.children;
@@ -1138,6 +1239,17 @@
   });
   $("https-only").addEventListener("change", function(e){ state.httpsOnly = e.target.checked; applyFilters(); });
   $("hide-dead").addEventListener("change", function(e){ state.hideDead = e.target.checked; applyFilters(); });
+  $("autoskip").addEventListener("change", function(e){ state.autoskip = e.target.checked; });
+  $("reset-failed").addEventListener("click", function(){
+    state.dead = {};
+    store.set("wc26:dead", {});
+    skipCount = 0;
+    var tiles = grid.children;
+    for(var i=0;i<tiles.length;i++) tiles[i].classList.remove("dead");
+    applyFilters();
+    showToast(t("reset_done"));
+    setTimeout(hideToast, 1800);
+  });
   $("btn-more").addEventListener("click", renderMore);
   $("btn-skip").addEventListener("click", playNext);
   $("btn-random").addEventListener("click", playRandom);

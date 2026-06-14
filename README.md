@@ -12,7 +12,10 @@ https://iptv-org.github.io/iptv/index.m3u
   browser's localStorage, per device
 - PWA: installable on phone/desktop home screen with app icon; the app
   shell loads offline (streams themselves always need a connection)
-- HLS playback (hls.js), failed-stream marking, auto-skip, random channel
+- HLS playback (hls.js) with resilience: when a stream is offline, geo-blocked,
+  or browser-blocked (CORS), the app fails fast (~7-9s), auto-skips to the next
+  reachable channel, and remembers failed streams for 24h so it stops serving
+  them. Toggle "Auto-skip" off or "Reset failed list" in the controls.
 - Default channel (TVRI Sport HD) auto-loads muted on open
 - Auto-localization: visitors with an Indonesian IP get the UI in Bahasa
   Indonesia (via Vercel's geo header at /api/geo); manual EN/ID switch in the
